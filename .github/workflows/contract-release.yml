@@ -1,0 +1,44 @@
+# Release: once a change to contract/ is on main, tag contract-v<version from contract/contract.json>.
+# A tag never moves: if it exists and contract/ changed beyond its README, the workflow fails (bump the version).
+name: contract-release
+on:
+  push:
+    branches: [main]
+    paths: ["contract/**"]
+
+permissions: {}
+
+concurrency:
+  group: contract-release
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          python-version: "3.13"
+      - name: Check the contract
+        run: uv run --with 'jsonschema>=4.23' python tools/check_contract.py
+      - name: Tag contract-v<version>
+        run: |
+          version=$(python3 -c 'import json; print(json.load(open("contract/contract.json"))["version"])')
+          tag="contract-v${version}"
+          if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            if git diff --quiet "${tag}" HEAD -- contract/ ':!contract/README.md'; then
+              echo "${tag} already exists and the contract files are the same (README change only)"
+              exit 0
+            fi
+            echo "::error::${tag} already exists and contract/ changed — bump the version in contract/contract.json"
+            exit 1
+          fi
+          git tag "${tag}" HEAD
+          git push origin "refs/tags/${tag}"
+          echo "tagged ${tag}"
