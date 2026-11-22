@@ -1,0 +1,75 @@
+# Manifest suity Delivery Intelligence Suite (krok 14a planu budowy suity, dbqm45/pdi docs/plan-budowy-suity.md §2).
+#
+# Jedno miejsce, które mówi, które wersje produktów tworzą wydanie suity i którą wersję kontraktu każdy z nich ma
+# przypiętą. Sprawdza go tools/check_suite.py (w CI razem z kontraktem); `--live` porównuje go z repozytoriami.
+# Plik leży poza contract/, więc jego zmiana nie wymaga nowej wersji kontraktu.
+#
+# Aktualizacja: po wydaniu produktu albo zmianie przypięcia kontraktu w produkcie popraw jego `version` / `contract`
+# i datę wydania suity; `python tools/check_suite.py --live` pokaże, co się rozjechało.
+
+suite:
+  release: "2026.11"
+  date: 2026-11-22
+  # Bieżąca wersja kontraktu: musi być równa contract/contract.json.
+  contract: 0.15.1
+  # Od tej wersji zmiany kontraktu są dla odbiorców zgodne wstecz (tylko pola opcjonalne i nowe typy zdarzeń, wg
+  # historii w contract/README.md; DI Release przeszło z 0.4.0 na 0.14.0 po porównaniu schematów, krok 4 planu).
+  # Przypięcie spoza zakresu [contract_compatible_from, contract] jest błędem.
+  contract_compatible_from: 0.4.0
+
+products:
+  - id: di-decision
+    name: DI Decision
+    repo: dbqm45/pdi
+    version: 0.10.0
+    version_source: { file: pyproject.toml, kind: pyproject }
+    contract: 0.15.1
+    pin: { file: tools/contract-pin.json, kind: json-version }
+
+  - id: di-agent-factory
+    name: DI Agent Factory
+    repo: dbqm45/tf
+    version: 22.8.0
+    version_source: { kind: tag }
+    contract: 0.15.1
+    pin: { file: tools/pdi-contract.json, kind: json-version }
+
+  - id: di-definition
+    name: DI Definition
+    repo: dbqm45/ci_for_sdlc
+    version: 0.1.64
+    version_source: { file: package.json, kind: package-json }
+    contract: 0.14.0
+    # Kilka zestawów przypięcia (każdy dla innej wersji); liczy się najnowszy.
+    pin: { file: scripts/pdi-contract.json, kind: json-sets-max }
+
+  - id: di-release
+    name: DI Release
+    repo: dbqm45/evdt-service-shipscope
+    version: 0.2.69
+    version_source: { file: package.json, kind: package-json }
+    contract: 0.14.0
+    # Kopie schematów z wersją w nazwie pliku (server/schemas/event.v0.14.0.schema.json).
+    pin: { file: server/schemas, kind: schema-filename }
+
+  - id: di-release-control
+    name: DI Release Control
+    repo: dbqm45/evdt-shipscope-flags
+    version: 0.7.3
+    version_source: { file: package.json, kind: package-json }
+    # Nie wymienia zdarzeń kontraktu; ma własny kontrakt dla serwisów (docs/sdk-api.md).
+
+  - id: di-channels
+    name: DI Channels
+    repo: dbqm45/di-channels
+    version: 0.0.0
+    version_source: { file: package.json, kind: package-json }
+    # Nie używa kontraktu: przyjmuje gate.waiting z pdi i wysyła pytania do webhooka DI Definition (własne API).
+
+# Kto wysyła komu zdarzenia albo pliki z kontraktu. Typy zdarzeń muszą istnieć w contract/event.schema.json.
+links:
+  - { from: di-agent-factory, to: di-decision, events: [gate.requested, metric.breached, run.started, run.progress, run.finished] }
+  - { from: di-definition, to: di-decision, events: [gate.requested, readiness.changed, decision.recorded] }
+  - { from: di-decision, to: di-definition, events: [gate.decided] }
+  - { from: di-release, to: di-decision, events: [release.stage_changed, feature.released] }
+  - { from: di-agent-factory, to: di-definition, files: [reconstruction.schema.json] }
