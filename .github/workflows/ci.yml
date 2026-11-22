@@ -17,3 +17,5 @@ jobs:
         with:
           python-version: "3.13"
       - run: uv run --with 'jsonschema>=4.23' python tools/check_contract.py
+      - run: uv run --with 'pyyaml>=6' python tools/check_suite.py
+      - run: uv run --with 'pyyaml>=6' --with pytest python -m pytest -q tools/test_check_suite.py

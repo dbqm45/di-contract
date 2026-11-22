@@ -32,17 +32,20 @@ changes only the `repo` in their pin files.
   2020-12, every schema and event type has an example, every example passes its schema, event examples carry the
   current version. CI runs it on every push and pull request.
 
-## Consumers
+## Consumers and the suite manifest
 
-| App | Pin file | Pinned version (2026-11-22) |
-|---|---|---|
-| DI Decision (pdi) | `contract/` (the former source; becomes a pinned copy) | 0.14.0 |
-| DI Agent Factory (tf) | `tools/pdi-contract.json` | 0.14.0 |
-| DI Definition (ci_for_sdlc) | `scripts/pdi-contract.json` | sets 0.4.0 … 0.14.0 |
-| DI Release (evdt-service-shipscope) | `server/schemas/*.v0.14.0.schema.json` | 0.14.0 |
+[`suite.yaml`](suite.yaml) names the product versions and the contract version each one pins for a suite release
+(step 14a of the plan); it is the up-to-date list of consumers. It lives outside `contract/`, so editing it needs no
+new contract version.
 
-Each consumer switches its pin from `dbqm45/pdi` to `dbqm45/di-contract` in its own pull request (step 7 of the
-plan). Until pdi's switch is merged, contract changes must not be made in pdi.
+- `uv run --with 'pyyaml>=6' python tools/check_suite.py` — the manifest's shape; `suite.contract` equals
+  `contract/contract.json`; every pin is a released version inside `[contract_compatible_from, contract]`; every link
+  names known products, event types and contract files, and both ends of an event link pin the contract. Products
+  behind the current version are listed as a note. CI runs it with the contract check.
+- `… tools/check_suite.py --live` — also reads each product's pin and version from its repository (`gh` CLI) and lists
+  every difference. Run it after a product release or a pin change, then update `suite.yaml`.
+- Tests of the check: `uv run --with 'pyyaml>=6' --with pytest python -m pytest -q tools/test_check_suite.py`.
 
-Planned next: a suite manifest (`suite.yaml`) that names which product versions and which contract version form a
-suite release (step 14a).
+Suite release 2026.11 (checked live on 2026-11-22): DI Decision 0.10.0 and DI Agent Factory 22.8.0 on contract
+0.15.1; DI Definition 0.1.64 and DI Release 0.2.69 on 0.14.0 (behind, inside the compatible range); DI Release
+Control 0.7.3 and DI Channels 0.0.0 do not use the contract.
