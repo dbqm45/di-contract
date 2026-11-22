@@ -7,7 +7,8 @@ What it checks (ported from pdi tests/test_contract.py, where the contract lived
   2. contract.json has a SemVer version, the shared key pattern and the default prefixes;
   3. every schema except the event schema has an example, and every event type has an example;
   4. every example passes its schema; the story-shape fixtures pass theirs;
-  5. every event example carries the current contract_version.
+  5. every event example, the decision example and the Decision Record example in decision-record.md carry the
+     current contract_version, and every schema title ends with it ("… 0.15.1)").
 Exit code: 0 — consistent, 1 — a problem (each one listed). Prints nothing from the files beyond names and paths.
 """
 
@@ -87,6 +88,15 @@ def check() -> list[str]:
         problems += problems_in(rel_schema, data, f"examples/{p.name}")
         if p.stem.startswith("event-") and data.get("contract_version") != version:
             problems.append(f"examples/{p.name}: contract_version is not {version}")
+    if load("examples/decision.json").get("contract_version") != version:
+        problems.append(f"examples/decision.json: contract_version is not {version}")
+    for name in schemas:
+        if not str(load(name).get("title", "")).endswith(f" {version})"):
+            problems.append(f"{name}: the title does not end with the current version ({version})")
+    spec = (CONTRACT / "decision-record.md").read_text(encoding="utf-8")
+    found = re.findall(r"^contract_version: (\S+)$", spec, flags=re.M)
+    if found != [version]:
+        problems.append(f"decision-record.md: the example's contract_version is {found or 'missing'}, not {version}")
     for rel, rel_schema in FIXTURES.items():
         problems += problems_in(rel_schema, load(rel), rel)
     return problems
