@@ -11,7 +11,7 @@ suite:
   release: "2026.11"
   date: 2026-11-23
   # Bieżąca wersja kontraktu: musi być równa contract/contract.json.
-  contract: 0.17.0
+  contract: 0.18.0
   # Od tej wersji zmiany kontraktu są dla odbiorców zgodne wstecz (tylko pola opcjonalne i nowe typy zdarzeń, wg
   # historii w contract/README.md; DI Release przeszło z 0.4.0 na 0.14.0 po porównaniu schematów, krok 4 planu).
   # Przypięcie spoza zakresu [contract_compatible_from, contract] jest błędem.
@@ -23,7 +23,7 @@ products:
     repo: dbqm45/pdi
     version: 0.10.0
     version_source: { file: pyproject.toml, kind: pyproject }
-    contract: 0.15.1
+    contract: 0.17.0
     pin: { file: tools/contract-pin.json, kind: json-version }
 
   - id: di-agent-factory
@@ -65,6 +65,15 @@ products:
     version: 0.0.0
     version_source: { file: package.json, kind: package-json }
     # Nie używa kontraktu: przyjmuje gate.waiting z pdi i wysyła pytania do webhooka DI Definition (własne API).
+
+  - id: di-identity
+    name: DI Identity
+    repo: dbqm45/di-identity
+    version: 0.1.0
+    version_source: { file: package.json, kind: package-json }
+    contract: 0.16.0
+    pin: { file: tools/contract-pin.json, kind: json-version }
+    # Usługa tożsamości suity na Keycloak (krok 14, ADR 17); z szablonu dbqm45/di-service-template.
 
 # Kto wysyła komu zdarzenia albo pliki z kontraktu. Typy zdarzeń muszą istnieć w contract/event.schema.json.
 links:
