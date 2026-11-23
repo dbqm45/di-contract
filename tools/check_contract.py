@@ -10,7 +10,7 @@ What it checks (ported from pdi tests/test_contract.py, where the contract lived
   5. every event example, the decision example and the Decision Record example in decision-record.md carry the
      current contract_version, and every schema title ends with it ("… 0.16.0)");
   6. the origin field (0.16.0) has the same shape in the decision and in decision.recorded, with the apps of the
-     event source enum.
+     event source enum; every suite app other than pdi is a value of the decision's source.kind (0.17.0).
 Exit code: 0 — consistent, 1 — a problem (each one listed). Prints nothing from the files beyond names and paths.
 """
 
@@ -115,8 +115,13 @@ def origin_problems() -> list[str]:
     problems = []
     if decision != recorded:
         problems.append("origin: decision.schema.json and decision.recorded differ")
-    if decision.get("properties", {}).get("app", {}).get("enum") != event["properties"]["source"]["enum"]:
+    apps = event["properties"]["source"]["enum"]
+    if decision.get("properties", {}).get("app", {}).get("enum") != apps:
         problems.append("origin.app: the apps differ from the event source enum")
+    kinds = load("decision.schema.json")["properties"]["source"]["properties"]["kind"]["enum"]
+    missing = [a for a in apps if a != "pdi" and a not in kinds]
+    if missing:
+        problems.append(f"decision source.kind: no value for suite apps {', '.join(missing)} (0.17.0)")
     return problems
 
 
