@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/dbqm45/pdi/contract/event.schema.json",
-  "title": "Zdarzenie (kontrakt suity 0.17.0)",
+  "title": "Zdarzenie (kontrakt suity 0.18.0)",
   "description": "Koperta zdarzenia wymienianego między pdi, tf, ci_for_sdlc i ShipScope; treść (payload) zależy od typu.",
   "type": "object",
   "additionalProperties": false,
@@ -1164,7 +1164,7 @@
         "name",
         "kind"
       ],
-      "description": "Kto uruchomił przebieg (0.15.0, DI Team: pole „Started by”). Inna osoba niż ta, która decyduje na bramce (`decided_by`).",
+      "description": "Kto uruchomił przebieg (0.15.0, DI Team: pole „Started by”). Inna osoba niż ta, która decyduje na bramce (`decided_by`). Od 0.18.0 także agent (DI4): wtedy `id` i `owner` są wymagane.",
       "properties": {
         "name": {
           "type": "string",
@@ -1180,11 +1180,37 @@
           "type": "string",
           "enum": [
             "human",
-            "automation"
+            "automation",
+            "agent"
           ],
-          "description": "`automation`: przebieg uruchomił harmonogram albo inny automat, nie człowiek."
+          "description": "`automation`: przebieg uruchomił harmonogram albo inny automat, nie człowiek; `agent` (0.18.0): agent z kontem w usłudze tożsamości suity (DI4), np. persona fabryki uruchamiająca kolejny przebieg."
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Dla `kind: agent` (0.18.0): `sub` człowieka odpowiedzialnego za agenta w usłudze tożsamości suity (DI4)."
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "agent"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "id",
+              "owner"
+            ]
+          }
+        }
+      ]
     },
     "pr_review": {
       "type": "object",
@@ -1284,6 +1310,11 @@
           "type": "string",
           "minLength": 1,
           "description": "Persona albo agent, który pracuje (np. nazwa persony fabryki)."
+        },
+        "agent_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identyfikator agenta (`sub` jego konta) w usłudze tożsamości suity (0.18.0, DI4), gdy agent ma konto; `agent` zostaje nazwą persony do wyświetlenia."
         },
         "repo": {
           "type": "string",
