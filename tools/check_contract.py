@@ -8,7 +8,9 @@ What it checks (ported from pdi tests/test_contract.py, where the contract lived
   3. every schema except the event schema has an example, and every event type has an example;
   4. every example passes its schema; the story-shape fixtures pass theirs;
   5. every event example, the decision example and the Decision Record example in decision-record.md carry the
-     current contract_version, and every schema title ends with it ("… 0.15.1)").
+     current contract_version, and every schema title ends with it ("… 0.16.0)");
+  6. the origin field (0.16.0) has the same shape in the decision and in decision.recorded, with the apps of the
+     event source enum.
 Exit code: 0 — consistent, 1 — a problem (each one listed). Prints nothing from the files beyond names and paths.
 """
 
@@ -97,8 +99,24 @@ def check() -> list[str]:
     found = re.findall(r"^contract_version: (\S+)$", spec, flags=re.M)
     if found != [version]:
         problems.append(f"decision-record.md: the example's contract_version is {found or 'missing'}, not {version}")
+    problems += origin_problems()
     for rel, rel_schema in FIXTURES.items():
         problems += problems_in(rel_schema, load(rel), rel)
+    return problems
+
+
+def origin_problems() -> list[str]:
+    """Pole pochodzenia (`origin`, od 0.16.0): ten sam kształt w decyzji i w `decision.recorded`, aplikacje jak w `source`."""
+    decision = load("decision.schema.json")["properties"].get("origin")
+    event = load("event.schema.json")
+    recorded = event["$defs"]["decision_recorded"]["properties"].get("origin")
+    if decision is None or recorded is None:
+        return ["origin: missing in decision.schema.json or in decision.recorded"]
+    problems = []
+    if decision != recorded:
+        problems.append("origin: decision.schema.json and decision.recorded differ")
+    if decision.get("properties", {}).get("app", {}).get("enum") != event["properties"]["source"]["enum"]:
+        problems.append("origin.app: the apps differ from the event source enum")
     return problems
 
 
