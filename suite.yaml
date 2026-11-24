@@ -11,7 +11,7 @@ suite:
   release: "2026.11"
   date: 2026-11-23
   # Bieżąca wersja kontraktu: musi być równa contract/contract.json.
-  contract: 0.21.0
+  contract: 0.21.1
   # Od tej wersji zmiany kontraktu są dla odbiorców zgodne wstecz (tylko pola opcjonalne i nowe typy zdarzeń, wg
   # historii w contract/README.md; DI Release przeszło z 0.4.0 na 0.14.0 po porównaniu schematów, krok 4 planu).
   # Przypięcie spoza zakresu [contract_compatible_from, contract] jest błędem.
