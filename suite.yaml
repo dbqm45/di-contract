@@ -11,7 +11,7 @@ suite:
   release: "2026.11"
   date: 2026-11-23
   # Bieżąca wersja kontraktu: musi być równa contract/contract.json.
-  contract: 0.18.0
+  contract: 0.19.0
   # Od tej wersji zmiany kontraktu są dla odbiorców zgodne wstecz (tylko pola opcjonalne i nowe typy zdarzeń, wg
   # historii w contract/README.md; DI Release przeszło z 0.4.0 na 0.14.0 po porównaniu schematów, krok 4 planu).
   # Przypięcie spoza zakresu [contract_compatible_from, contract] jest błędem.
@@ -29,17 +29,17 @@ products:
   - id: di-agent-factory
     name: DI Agent Factory
     repo: dbqm45/tf
-    version: 22.8.0
+    version: 24.8.0
     version_source: { kind: tag }
-    contract: 0.15.1
+    contract: 0.17.0
     pin: { file: tools/pdi-contract.json, kind: json-version }
 
   - id: di-definition
     name: DI Definition
     repo: dbqm45/ci_for_sdlc
-    version: 0.1.64
+    version: 0.1.68
     version_source: { file: package.json, kind: package-json }
-    contract: 0.14.0
+    contract: 0.17.0
     # Kilka zestawów przypięcia (każdy dla innej wersji); liczy się najnowszy.
     pin: { file: scripts/pdi-contract.json, kind: json-sets-max }
 
@@ -77,7 +77,7 @@ products:
 
 # Kto wysyła komu zdarzenia albo pliki z kontraktu. Typy zdarzeń muszą istnieć w contract/event.schema.json.
 links:
-  - { from: di-agent-factory, to: di-decision, events: [gate.requested, metric.breached, run.started, run.progress, run.finished] }
+  - { from: di-agent-factory, to: di-decision, events: [gate.requested, metric.breached, run.started, run.progress, run.finished, decision.recorded] }
   - { from: di-definition, to: di-decision, events: [gate.requested, readiness.changed, decision.recorded] }
   - { from: di-decision, to: di-definition, events: [gate.decided] }
   - { from: di-release, to: di-decision, events: [release.stage_changed, feature.released] }
