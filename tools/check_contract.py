@@ -100,6 +100,7 @@ def check() -> list[str]:
     if found != [version]:
         problems.append(f"decision-record.md: the example's contract_version is {found or 'missing'}, not {version}")
     problems += origin_problems()
+    problems += reversibility_problems()
     for rel, rel_schema in FIXTURES.items():
         problems += problems_in(rel_schema, load(rel), rel)
     return problems
@@ -122,6 +123,32 @@ def origin_problems() -> list[str]:
     missing = [a for a in apps if a != "pdi" and a not in kinds]
     if missing:
         problems.append(f"decision source.kind: no value for suite apps {', '.join(missing)} (0.17.0)")
+    return problems
+
+
+def reversibility_problems() -> list[str]:
+    """Odwracalność i decyzja tymczasowa (0.19.0, N2): to samo w decyzji, w `decision.recorded` i w pytaniach
+    (`gate.requested`, `decision.proposed`); decyzja tymczasowa nigdy nie jest `one_way`."""
+    decision = load("decision.schema.json")
+    defs = load("event.schema.json")["$defs"]
+    problems = []
+    rev = decision["properties"].get("reversibility")
+    if rev is None or "provisional" not in decision["properties"]:
+        return ["reversibility: missing in decision.schema.json (0.19.0)"]
+    if defs["decision_recorded"]["properties"].get("reversibility") != rev:
+        problems.append("reversibility: decision.schema.json and decision.recorded differ")
+    if defs["decision_recorded"]["properties"].get("provisional") != decision["properties"]["provisional"]:
+        problems.append("provisional: decision.schema.json and decision.recorded differ")
+    for name in ("gate_requested", "decision_proposed"):
+        fields = defs[name]["properties"]
+        if fields.get("reversibility") != rev or not {"closes_at", "default_option", "asked"} <= set(fields):
+            problems.append(f"{name}: reversibility, closes_at, default_option or asked missing or different (0.19.0)")
+    sample = load("examples/decision.json")
+    bad = {**sample, "provisional": True, "reversibility": "one_way"}
+    if not problems_in("decision.schema.json", bad, "provisional one_way"):
+        problems.append("decision.schema.json: accepts a provisional one_way decision")
+    good = {**sample, "provisional": True, "reversibility": "local"}
+    problems += problems_in("decision.schema.json", good, "provisional local decision")
     return problems
 
 
