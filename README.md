@@ -6,7 +6,7 @@ policy, triage recommendation, reconstruction, design links, and the event envel
 type). The detailed description, in Polish, is in [`contract/README.md`](contract/README.md); the Decision Record
 file format is in [`contract/decision-record.md`](contract/decision-record.md).
 
-Current version: **0.19.0** (`contract/contract.json`).
+Current version: **0.20.0** (`contract/contract.json`).
 
 ## Where it came from
 
