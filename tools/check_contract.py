@@ -10,7 +10,9 @@ What it checks (ported from pdi tests/test_contract.py, where the contract lived
   5. every event example, the decision example and the Decision Record example in decision-record.md carry the
      current contract_version, and every schema title ends with it ("… 0.16.0)");
   6. the origin field (0.16.0) has the same shape in the decision and in decision.recorded, with the apps of the
-     event source enum; every suite app other than pdi is a value of the decision's source.kind (0.17.0).
+     event source enum; every suite app other than pdi is a value of the decision's source.kind (0.17.0);
+  7. applies_to (0.22.0) is the same in the decision and in decision.recorded, and the reference path matcher
+     below gives the expected result for every case in fixtures/applies-to/cases.json.
 Exit code: 0 — consistent, 1 — a problem (each one listed). Prints nothing from the files beyond names and paths.
 """
 
@@ -101,6 +103,7 @@ def check() -> list[str]:
         problems.append(f"decision-record.md: the example's contract_version is {found or 'missing'}, not {version}")
     problems += origin_problems()
     problems += reversibility_problems()
+    problems += applies_to_problems()
     for rel, rel_schema in FIXTURES.items():
         problems += problems_in(rel_schema, load(rel), rel)
     return problems
@@ -149,6 +152,55 @@ def reversibility_problems() -> list[str]:
         problems.append("decision.schema.json: accepts a provisional one_way decision")
     good = {**sample, "provisional": True, "reversibility": "local"}
     problems += problems_in("decision.schema.json", good, "provisional local decision")
+    return problems
+
+
+def _segment(pattern: str) -> re.Pattern[str]:
+    """One path segment of an `applies_to` pattern: `*` — any characters but `/`, `?` — one character."""
+    return re.compile("".join("[^/]*" if c == "*" else "[^/]" if c == "?" else re.escape(c) for c in pattern) + r"\Z")
+
+
+def applies_to_match(pattern: str, path: str) -> bool:
+    """Reference matcher of `applies_to.paths` (decision-record.md §4a): anchored at the repository root, `**` as a
+    whole segment is zero or more segments, and a pattern matching a directory covers every file under it."""
+    pat = pattern.split("/")
+    parts = path.replace("\\", "/").removeprefix("./").split("/")
+
+    def go(i: int, j: int) -> bool:
+        if i == len(pat):
+            return True  # the rest of the path lies under the matched directory
+        if pat[i] == "**":
+            return any(go(i + 1, k) for k in range(j, len(parts) + 1))
+        return j < len(parts) and bool(_segment(pat[i]).match(parts[j])) and go(i + 1, j + 1)
+
+    return go(0, 0)
+
+
+def applies_to_problems() -> list[str]:
+    """`applies_to` (0.22.0): the same in the decision and in `decision.recorded`; the fixture cases match as stated;
+    the patterns of the cases are valid in the schema and the invalid ones are rejected."""
+    decision = load("decision.schema.json")["properties"].get("applies_to")
+    recorded = load("event.schema.json")["$defs"]["decision_recorded"]["properties"].get("applies_to")
+    if decision is None:
+        return ["applies_to: missing in decision.schema.json (0.22.0)"]
+    problems = []
+    if recorded != decision:
+        problems.append("applies_to: decision.schema.json and decision.recorded differ")
+    if not (CONTRACT / "fixtures/applies-to/cases.json").exists():
+        return [*problems, "fixtures/applies-to/cases.json: missing (0.22.0)"]
+    fixture = load("fixtures/applies-to/cases.json")
+    sample = load("examples/decision.json")
+    for case in fixture["cases"]:
+        got = applies_to_match(case["pattern"], case["path"])
+        if got != case["match"]:
+            problems.append(f"applies-to case {case['pattern']!r} ~ {case['path']!r}: {got}, expected {case['match']}")
+    for pattern in sorted({c["pattern"] for c in fixture["cases"]}):
+        problems += problems_in("decision.schema.json", {**sample, "applies_to": {"paths": [pattern]}}, pattern)
+    for pattern in fixture["invalid_patterns"]:
+        if not problems_in("decision.schema.json", {**sample, "applies_to": {"paths": [pattern]}}, pattern):
+            problems.append(f"decision.schema.json: accepts the invalid applies_to pattern {pattern!r}")
+    if not problems_in("decision.schema.json", {**sample, "applies_to": {}}, "empty applies_to"):
+        problems.append("decision.schema.json: accepts an empty applies_to")
     return problems
 
 
