@@ -37,7 +37,7 @@ products:
   - id: di-definition
     name: DI Definition
     repo: dbqm45/ci_for_sdlc
-    version: 0.1.71
+    version: 0.1.72
     version_source: { file: package.json, kind: package-json }
     contract: 0.22.0
     # Kilka zestawów przypięcia (każdy dla innej wersji); liczy się najnowszy.
