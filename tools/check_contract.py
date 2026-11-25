@@ -12,7 +12,9 @@ What it checks (ported from pdi tests/test_contract.py, where the contract lived
   6. the origin field (0.16.0) has the same shape in the decision and in decision.recorded, with the apps of the
      event source enum; every suite app other than pdi is a value of the decision's source.kind (0.17.0);
   7. applies_to (0.22.0) is the same in the decision and in decision.recorded, and the reference path matcher
-     below gives the expected result for every case in fixtures/applies-to/cases.json.
+     below gives the expected result for every case in fixtures/applies-to/cases.json;
+  8. a decision's status is only recorded or superseded (0.23.0: reverted removed — undoing a decision is a new
+     decision that supersedes it, decision-record.md §7).
 Exit code: 0 — consistent, 1 — a problem (each one listed). Prints nothing from the files beyond names and paths.
 """
 
@@ -104,6 +106,9 @@ def check() -> list[str]:
     problems += origin_problems()
     problems += reversibility_problems()
     problems += applies_to_problems()
+    status = load("decision.schema.json")["properties"]["status"].get("enum")
+    if status != ["recorded", "superseded"]:
+        problems.append(f"decision.schema.json: status is {status}, expected recorded and superseded (0.23.0)")
     for rel, rel_schema in FIXTURES.items():
         problems += problems_in(rel_schema, load(rel), rel)
     return problems
