@@ -46,7 +46,7 @@ products:
   - id: di-release
     name: DI Release
     repo: dbqm45/evdt-service-shipscope
-    version: 0.2.69
+    version: 0.2.70
     version_source: { file: package.json, kind: package-json }
     contract: 0.14.0
     # Kopie schematów z wersją w nazwie pliku (server/schemas/event.v0.14.0.schema.json).
