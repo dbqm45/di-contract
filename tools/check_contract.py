@@ -14,7 +14,9 @@ What it checks (ported from pdi tests/test_contract.py, where the contract lived
   7. applies_to (0.22.0) is the same in the decision and in decision.recorded, and the reference path matcher
      below gives the expected result for every case in fixtures/applies-to/cases.json;
   8. a decision's status is only recorded or superseded (0.23.0: reverted removed — undoing a decision is a new
-     decision that supersedes it, decision-record.md §7).
+     decision that supersedes it, decision-record.md §7);
+  9. the problem and the triage recommendation have the same rejection reasons and the same no_code object, required
+     with rejection_reason no_code (0.24.0, DV7).
 Exit code: 0 — consistent, 1 — a problem (each one listed). Prints nothing from the files beyond names and paths.
 """
 
@@ -106,6 +108,7 @@ def check() -> list[str]:
     problems += origin_problems()
     problems += reversibility_problems()
     problems += applies_to_problems()
+    problems += no_code_problems()
     status = load("decision.schema.json")["properties"]["status"].get("enum")
     if status != ["recorded", "superseded"]:
         problems.append(f"decision.schema.json: status is {status}, expected recorded and superseded (0.23.0)")
@@ -207,6 +210,27 @@ def applies_to_problems() -> list[str]:
     if not problems_in("decision.schema.json", {**sample, "applies_to": {}}, "empty applies_to"):
         problems.append("decision.schema.json: accepts an empty applies_to")
     return problems
+
+
+def no_code_problems() -> list[str]:
+    """DV7 (0.24.0): `no_code` — a problem solved without development — the same in the problem and the triage
+    recommendation, and required with `rejection_reason: no_code`."""
+    problem, rec = load("problem.schema.json"), load("triage-recommendation.schema.json")
+    reasons = [s["properties"]["rejection_reason"]["enum"] for s in (problem, rec)]
+    out = []
+    if "no_code" not in reasons[0] or reasons[0] != reasons[1]:
+        out.append(f"rejection_reason: no_code missing or the reasons differ ({reasons[0]} / {reasons[1]}) (0.24.0)")
+    shapes = [s["properties"].get("no_code") for s in (problem, rec)]
+    if shapes[0] is None or shapes[0] != shapes[1]:
+        return [*out, "no_code: missing or different in problem.schema.json and triage-recommendation.schema.json"]
+    sample = load("examples/triage-recommendation.json")
+    base = {**{k: v for k, v in sample.items() if k not in ("executor", "brief")}, "recommended_status": "rejected",
+            "tf_state": "wontfix", "rejection_reason": "no_code"}
+    if not problems_in("triage-recommendation.schema.json", base, "no_code without the object"):
+        out.append("triage-recommendation.schema.json: accepts rejection_reason no_code without no_code")
+    good = {**base, "no_code": {"kind": "configuration", "how": "Set the tariff for a charger group in Settings."}}
+    out += problems_in("triage-recommendation.schema.json", good, "no_code recommendation")
+    return out
 
 
 def main() -> int:
