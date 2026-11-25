@@ -29,7 +29,7 @@ products:
   - id: di-agent-factory
     name: DI Agent Factory
     repo: dbqm45/tf
-    version: 24.17.0
+    version: 24.18.1
     version_source: { kind: tag }
     contract: 0.24.0
     pin: { file: tools/pdi-contract.json, kind: json-version }
