@@ -69,7 +69,7 @@ products:
   - id: di-identity
     name: DI Identity
     repo: dbqm45/di-identity
-    version: 0.1.4
+    version: 0.1.5
     version_source: { file: package.json, kind: package-json }
     contract: 0.16.0
     pin: { file: tools/contract-pin.json, kind: json-version }
