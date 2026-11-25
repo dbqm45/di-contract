@@ -55,7 +55,7 @@ products:
   - id: di-release-control
     name: DI Release Control
     repo: dbqm45/evdt-shipscope-flags
-    version: 0.7.3
+    version: 0.7.6
     version_source: { file: package.json, kind: package-json }
     # Nie wymienia zdarzeń kontraktu; ma własny kontrakt dla serwisów (docs/sdk-api.md).
 
@@ -69,7 +69,7 @@ products:
   - id: di-identity
     name: DI Identity
     repo: dbqm45/di-identity
-    version: 0.1.0
+    version: 0.1.3
     version_source: { file: package.json, kind: package-json }
     contract: 0.16.0
     pin: { file: tools/contract-pin.json, kind: json-version }
