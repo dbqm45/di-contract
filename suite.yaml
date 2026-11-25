@@ -23,15 +23,15 @@ products:
     repo: dbqm45/pdi
     version: 0.10.0
     version_source: { file: pyproject.toml, kind: pyproject }
-    contract: 0.22.0
+    contract: 0.23.0
     pin: { file: tools/contract-pin.json, kind: json-version }
 
   - id: di-agent-factory
     name: DI Agent Factory
     repo: dbqm45/tf
-    version: 24.16.0
+    version: 24.16.1
     version_source: { kind: tag }
-    contract: 0.22.0
+    contract: 0.23.0
     pin: { file: tools/pdi-contract.json, kind: json-version }
 
   - id: di-definition
