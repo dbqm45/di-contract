@@ -9,7 +9,7 @@
 
 suite:
   release: "2026.11"
-  date: 2026-11-24
+  date: 2026-11-25
   # Bieżąca wersja kontraktu: musi być równa contract/contract.json.
   contract: 0.22.0
   # Od tej wersji zmiany kontraktu są dla odbiorców zgodne wstecz (tylko pola opcjonalne i nowe typy zdarzeń, wg
@@ -29,7 +29,7 @@ products:
   - id: di-agent-factory
     name: DI Agent Factory
     repo: dbqm45/tf
-    version: 24.13.0
+    version: 24.16.0
     version_source: { kind: tag }
     contract: 0.22.0
     pin: { file: tools/pdi-contract.json, kind: json-version }
@@ -37,9 +37,9 @@ products:
   - id: di-definition
     name: DI Definition
     repo: dbqm45/ci_for_sdlc
-    version: 0.1.68
+    version: 0.1.69
     version_source: { file: package.json, kind: package-json }
-    contract: 0.17.0
+    contract: 0.22.0
     # Kilka zestawów przypięcia (każdy dla innej wersji); liczy się najnowszy.
     pin: { file: scripts/pdi-contract.json, kind: json-sets-max }
 
